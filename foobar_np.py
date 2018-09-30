@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # install foo_controlserver (https://github.com/audiohead/foo_controlserver)
-# set port to foobar_port, delimiter to '|||' and enable server
-# supported fields in 'format': $artist, $albumartist, $date, $title, $album
+# set port to $foobar_port, delimiter to '|||' and enable server
+# supported fields in $format: $artist, $albumartist, $date, $title, $album
 
 import weechat as wc
-import telnetlib
+from telnetlib import Telnet
 from string import Template
 
 name = 'foobar_np'
@@ -14,7 +14,7 @@ def config(*args, **kwargs):
     options = {
         'foobar_host' : 'localhost',
         'foobar_port' : '3333',
-        'format' : 'NP: $title by $artist from $album ($date)',
+        'format' : 'NP: $title by $artist from $album ($date)'
     }
     for option, default in options.items():
         if not wc.config_is_set_plugin(option):
@@ -25,7 +25,7 @@ def np(*args, **kwargs):
     host = wc.config_get_plugin('foobar_host')
     port = wc.config_get_plugin('foobar_port')
     try:
-        tn = telnetlib.Telnet(host, port, timeout=3)
+        tn = Telnet(host, port, timeout=3)
     except Exception as error:
         wc.prnt(wc.current_buffer(), 'Cannot connect to foobar: {}'.format(error))
         return wc.WEECHAT_RC_ERROR
@@ -37,7 +37,13 @@ def np(*args, **kwargs):
     if status == 2:
         npstring = 'NP: nothing'
     else:
-        fields = dict(albumartist = rawline[6], album = rawline[7], date = rawline[8], title = rawline[11], artist = rawline[12])
+        fields = {
+            'albumartist' : rawline[6],
+            'album' : rawline[7],
+            'date' : rawline[8],
+            'title' : rawline[11],
+            'artist' : rawline[12]
+        }
         nptemplate = wc.config_get_plugin('format')
         npstring = Template(nptemplate).safe_substitute(fields)
     wc.command(wc.current_buffer(), '/me ' + npstring)
