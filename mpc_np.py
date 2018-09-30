@@ -17,12 +17,12 @@ wc.register(name, 'janoosh', '1.4', 'BSD-2c', 'mpc-hc now playing with optional 
 
 def config(*args, **kwargs):
     options = {
-        "mpc_host" : "localhost",
-        "mpc_port" : "13579",
-        "screencap_path" : "/tmp/screencap.jpg",
-        "imgur_client_id" : "client_id_here", #REMEMBER TO FILL THIS IN
-        "format" : "is watching \x02$file\x02 $bar [$positionstring/$durationstring]\x02",
-        "format-ss" : "$url \x02$file\x02 $bar [$positionstring/$durationstring]\x02"
+        'mpc_host' : 'localhost',
+        'mpc_port' : '13579',
+        'screencap_path' : '/tmp/screencap.jpg',
+        'imgur_client_id' : 'client_id_here', #REMEMBER TO FILL THIS IN
+        'format' : 'is watching \x02$file\x02 $bar [$positionstring/$durationstring]\x02',
+        'format-ss' : '$url \x02$file\x02 $bar [$positionstring/$durationstring]\x02'
     }
     for option, default in options.items():
         if not wc.config_is_set_plugin(option):
@@ -37,15 +37,15 @@ def mpc_info():
         r = requests.get('http://{}:{}/variables.html'.format(host, port), timeout=0.5)
         output = BeautifulSoup(r.content, 'html.parser')
     except:
-        wc.prnt(wc.current_buffer(), "MPC-HC timeout")
+        wc.prnt(wc.current_buffer(), 'MPC-HC timeout')
         return wc.WEECHAT_RC_ERROR
     info={}
     for prop in ['file', 'position', 'duration', 'positionstring', 'durationstring']:
-        info["{}".format(prop)] = output.find('p', id=prop).text
-    info["position"] = float(info["position"])
-    info["duration"] = float(info["duration"])
-    percent = int((info["position"]/info["duration"]) * 100)
-    bar_prog = int(round((info["position"]/info["duration"])*15, 1))
+        info['{}'.format(prop)] = output.find('p', id=prop).text
+    info['position'] = float(info['position'])
+    info['duration'] = float(info['duration'])
+    percent = int((info['position']/info['duration']) * 100)
+    bar_prog = int(round((info['position']/info['duration'])*15, 1))
     bar = '['+'>'*bar_prog+'-'*(15-bar_prog)+']'
     if percent < 10:
         bar = bar[:8] + str(percent) + '%' + bar[10:]
@@ -53,7 +53,7 @@ def mpc_info():
         bar = bar[:7] + str(percent) + '%' + bar[11:]
     else:
         bar = bar[:7] + str(percent) + '%' + bar[10:]
-    info["bar"] = bar
+    info['bar'] = bar
     return info
 
 def upload_ss(file, positionstring):
@@ -63,12 +63,12 @@ def upload_ss(file, positionstring):
     port = wc.config_get_plugin('mpc_port')
     im = pyimgur.Imgur(clientid)
     urllib.urlretrieve('http://{}:{}/snapshot.jpg'.format(host, port), filepath)
-    posttitle = '{}_{}'.format(file.replace(" ", "_"), positionstring)
+    posttitle = '{}_{}'.format(file.replace(' ', '_'), positionstring)
     try:
         screencap = im.upload_image(path=filepath, title=posttitle)
     except:
         wc.prnt(wc.current_buffer(), 'Failed to upload screencap, check main buffer.')
-        return ""
+        return ''
     try:
         os.remove(filepath)
     except OSError as e:
