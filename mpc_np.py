@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # install requests, beautifulsoup4 and pyimgur (https://github.com/Damgaard/PyImgur)
 # make sure mpc's web interface (and preview for screencaps) is enabled and listens on $mpc_port
+# set $imgur_client_id to imgur client id from https://imgur.com/account/settings/apps
 # supported fields in $format fields: $file, $bar, $positionstring, $durationstring
 # $url only supported in $format-ss  
 
