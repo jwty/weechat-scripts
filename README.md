@@ -4,6 +4,7 @@ Various weechat plugins
 ```
 # install foo_controlserver (https://github.com/audiohead/foo_controlserver)
 # set port to $foobar_port, delimiter to '|||' and enable server
+# enable utf-8 output/input for non-ascii characters support
 # supported fields in $format: $artist, $albumartist, $date, $title, $album
 ```
 ### Usage
