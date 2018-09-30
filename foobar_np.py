@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # install foo_controlserver (https://github.com/audiohead/foo_controlserver)
 # set port to $foobar_port, delimiter to '|||' and enable server
+# enable utf-8 output/input for non-ascii characters support
 # supported fields in $format: $artist, $albumartist, $date, $title, $album
 
 import weechat as wc
@@ -45,7 +46,7 @@ def np(*args, **kwargs):
             'artist' : rawline[12]
         }
         nptemplate = wc.config_get_plugin('format')
-        npstring = Template(nptemplate).safe_substitute(fields)
+        npstring = Template(nptemplate).safe_substitute(fields).encode('utf-8')
     wc.command(wc.current_buffer(), '/me ' + npstring)
     return wc.WEECHAT_RC_OK
 
