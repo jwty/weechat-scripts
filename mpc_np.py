@@ -2,26 +2,26 @@
 # install requests, beautifulsoup4 and pyimgur (https://github.com/Damgaard/PyImgur)
 # make sure mpc's web interface (and preview for screencaps) is enabled and listens on $mpc_port
 # set $imgur_client_id to imgur client id from https://imgur.com/account/settings/apps
-# supported fields in $format fields: $file, $bar, $positionstring, $durationstring
-# $url only supported in $format-ss  
+# supported fields in $format fields: $file, $percentage, $bar, $positionstring, $durationstring
+# $url only supported in $format-ss
 
-import weechat as wc
-import requests
 from bs4 import BeautifulSoup
-import pyimgur
-import urllib
 from string import Template
 import os
+import pyimgur
+import requests
+import urllib
+import weechat as wc
 
-name = 'mpc_np'
-wc.register(name, 'janoosh', '1.4', 'BSD-2c', 'mpc-hc now playing with optional screencap', '', '')
+NAME = 'mpc_np'
+wc.register(NAME, 'janoosh', '1.5', 'BSD-2c', 'mpc-hc now playing with optional screencap', '', '')
 
 def config(*args, **kwargs):
     options = {
         'mpc_host' : 'localhost',
         'mpc_port' : '13579',
         'screencap_path' : '/tmp/screencap.jpg',
-        'imgur_client_id' : 'client_id_here', #REMEMBER TO FILL THIS IN
+        'imgur_client_id' : 'client_id_here', # REMEMBER TO FILL THIS IN
         'format' : 'is watching \x02$file\x02 $bar [$positionstring/$durationstring]\x02',
         'format-ss' : '$url \x02$file\x02 $bar [$positionstring/$durationstring]\x02'
     }
@@ -46,6 +46,7 @@ def mpc_info():
     info['position'] = float(info['position'])
     info['duration'] = float(info['duration'])
     percent = int((info['position']/info['duration']) * 100)
+    info['percentage'] = percent
     bar_prog = int(round((info['position']/info['duration'])*15, 1))
     bar = '['+'>'*bar_prog+'-'*(15-bar_prog)+']'
     if percent < 10:
@@ -92,8 +93,10 @@ def mpc_np_ss(*args, **kwargs):
 
 wc.hook_command('vid', 'mpc-hc now playing', '', '', '', 'mpc_np', '')
 wc.hook_command('vid-ss', 'mpc-hc now playing with screenshot', '', '', '', 'mpc_np_ss', '')
-wc.hook_config('plugins.var.python.' + name + '.mpc_host', 'config', '')
-wc.hook_config('plugins.var.python.' + name + '.mpc_port', 'config', '')
-wc.hook_config('plugins.var.python.' + name + '.screencap_path', 'config', '')
-wc.hook_config('plugins.var.python.' + name + '.imgur_client_id', 'config', '')
+wc.hook_config('plugins.var.python.' + NAME + '.mpc_host', 'config', '')
+wc.hook_config('plugins.var.python.' + NAME + '.mpc_port', 'config', '')
+wc.hook_config('plugins.var.python.' + NAME + '.screencap_path', 'config', '')
+wc.hook_config('plugins.var.python.' + NAME + '.imgur_client_id', 'config', '')
+wc.hook_config('plugins.var.python.' + NAME + '.format', 'config', '')
+wc.hook_config('plugins.var.python.' + NAME + '.format-ss', 'config', '')
 config()
