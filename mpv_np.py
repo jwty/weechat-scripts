@@ -30,6 +30,10 @@ import os
 import pyimgur
 import socket
 import time
+import sys
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 NAME = 'mpv_np'
 wc.register(NAME, 'janoosh', '1.0', 'BSD-2c', 'mpv now playing with optional screenshot (and WSL support)', '', '')
@@ -112,7 +116,7 @@ def mpv_np(*args, **kwargs):
 def mpv_np_screenshot(*args, **kwargs):
     info = mpv_info()
     info['url'] = mpv_take_screenshot(info['filename'], info['playbacktime'])
-    npstring = Template(wc.config_get_plugin('format-ss')).safe_substitute(info.encode('utf-8'))
+    npstring = Template(wc.config_get_plugin('format-ss')).safe_substitute(info)
     wc.command(wc.current_buffer(), '/me ' + npstring)
     return wc.WEECHAT_RC_OK
 
