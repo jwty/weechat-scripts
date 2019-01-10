@@ -112,7 +112,7 @@ def mpv_np(*args, **kwargs):
 def mpv_np_screenshot(*args, **kwargs):
     info = mpv_info()
     info['url'] = mpv_take_screenshot(info['filename'], info['playbacktime'])
-    npstring = Template(wc.config_get_plugin('format-ss')).safe_substitute(info)
+    npstring = Template(wc.config_get_plugin('format-ss')).safe_substitute(info.encode('utf-8'))
     wc.command(wc.current_buffer(), '/me ' + npstring)
     return wc.WEECHAT_RC_OK
 
