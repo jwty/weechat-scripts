@@ -37,6 +37,8 @@ sys.setdefaultencoding('utf-8')
 
 NAME = 'mpv_np'
 wc.register(NAME, 'janoosh', '1.0', 'BSD-2c', 'mpv now playing with optional screenshot (and WSL support)', '', '')
+# import pybuffer # debug, install pybuffer script to use
+# debug = pybuffer.debugBuffer(globals(), "mpv_np")
 
 def config(*args, **kwargs):
     options = {
