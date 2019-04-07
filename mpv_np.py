@@ -19,24 +19,23 @@
 #   'Failed to upload screenshot: [Errno 2] No such file or directory: '/mnt/c/mpv/np_screenshot.jpg''
 #   (this applies to other path mistakes so check them carefully, script will skip $url if upload errors out)
 # TODO:
-# * remove hours from $playbacktime and $duration if time is less than 1 hour
 # * option to keep captured screenshots with timestamps etc.
 # * better WSL handling i guess
 
+import sys
 from string import Template
 import weechat as wc
 import json
 import os
 import pyimgur
+import re
 import socket
 import time
-import sys
 
 reload(sys)
-sys.setdefaultencoding('utf-8')
-
+sys.setdefaultencoding('utf-8') #what a hack
 NAME = 'mpv_np'
-wc.register(NAME, 'janoosh', '1.0', 'BSD-2c', 'mpv now playing with optional screenshot (and WSL support)', '', '')
+wc.register(NAME, 'janoosh', '1.2', 'BSD-2c', 'mpv now playing with optional screenshot (and WSL support)', '', '')
 # import pybuffer # debug, install pybuffer script to use
 # debug = pybuffer.debugBuffer(globals(), "mpv_np")
 
@@ -64,13 +63,24 @@ def mpv_take_screenshot(filename, playbacktime):
     client.connect(mpv_socket)
     request = '{"command": ["screenshot-to-file","%s"]}\n' %filepath_screenshot
     client.send(request)
-    client.recv(512)
+    for retries in range(0,10):
+        try:
+            client.recv(512)
+            break
+        except Exception as e:
+            # wc.prnt(wc.current_buffer(), 'recv error (screenshot): {}'.format(e)) #debug
+            continue
     client.close()
     im = pyimgur.Imgur(imgur_id)
     posttitle = '{}_{}'.format(filename.replace(' ', '_'), playbacktime)
-    wc.prnt("", posttitle)
     try:
-        screenshot = im.upload_image(path=filepath_upload, title=posttitle)
+        for retries in range(0,10):
+            try:
+                screenshot = im.upload_image(path=filepath_upload, title=posttitle)
+                break
+            except Exception as e:
+                # wc.prnt(wc.current_buffer(), 'Failed to connect: {}'.format(e)) # debug
+                continue
     except Exception as e:
         wc.prnt(wc.current_buffer(), 'Failed to upload screenshot: {}'.format(e))
         return ''
@@ -89,8 +99,17 @@ def mpv_info():
     for prop in ['filename', 'media-title', 'playback-time', 'duration']:
         request = '{"command": ["get_property", "%s"]}\n' %prop
         client.send(request)
-        info[prop] = json.loads(client.recv(1024))['data']
+        for retries in range(0,10):
+            try:
+                info[prop] = json.loads(client.recv(1024))['data']
+                break
+            except Exception as e:
+                # wc.prnt(wc.current_buffer(), 'recv error: {}'.format(e)) # debug
+                continue
+
     client.close()
+    duration = info['duration']
+    wc.prnt(wc.current_buffer(), 'duration: {}'.format(info['duration']))
     percent = int((info['playback-time']/info['duration']) * 100)
     info['percentage'] = percent
     bar_prog = int(round((info['playback-time']/info['duration'])*15, 1))
@@ -105,19 +124,31 @@ def mpv_info():
     info['filename'] = info['filename'].replace('_', ' ').encode("utf-8")
     # hyphen removal necessary because of string.Template restrictions
     info['mediatitle'] = info.pop('media-title').replace('_', ' ').encode("utf-8")
-    info['playbacktime'] = time.strftime("%H:%M:%S", time.gmtime(info.pop('playback-time')))
-    info['duration'] = time.strftime("%H:%M:%S", time.gmtime(info['duration']))
+    if info['duration'] > 3600:
+        time_string = "%H:%M:%S"
+    else:
+        time_string = "%M:%S"
+    info['playbacktime'] = time.strftime(time_string, time.gmtime(info.pop('playback-time')))
+    info['duration'] = time.strftime(time_string, time.gmtime(info['duration']))
     return info
 
 def mpv_np(*args, **kwargs):
-    info = mpv_info()
+    try:
+        info = mpv_info()
+    except Exception as e:
+        wc.prnt(wc.current_buffer(), 'Failed to get mpv info (is socket available?): {}'.format(e))
+        return wc.WEECHAT_RC_ERROR
     npstring = Template(wc.config_get_plugin('format')).safe_substitute(info)
     wc.command(wc.current_buffer(), '/me ' + npstring)
     return wc.WEECHAT_RC_OK
 
 def mpv_np_screenshot(*args, **kwargs):
-    info = mpv_info()
-    info['url'] = mpv_take_screenshot(info['filename'], info['playbacktime'])
+    try:
+        info = mpv_info()
+        info['url'] = mpv_take_screenshot(info['filename'], info['playbacktime'])
+    except Exception as e:
+        wc.prnt(wc.current_buffer(), 'Failed to get mpv info (is socket available?): {}'.format(e))
+        return wc.WEECHAT_RC_ERROR
     npstring = Template(wc.config_get_plugin('format-ss')).safe_substitute(info)
     wc.command(wc.current_buffer(), '/me ' + npstring)
     return wc.WEECHAT_RC_OK
