@@ -108,8 +108,6 @@ def mpv_info():
                 continue
 
     client.close()
-    duration = info['duration']
-    wc.prnt(wc.current_buffer(), 'duration: {}'.format(info['duration']))
     percent = int((info['playback-time']/info['duration']) * 100)
     info['percentage'] = percent
     bar_prog = int(round((info['playback-time']/info['duration'])*15, 1))
