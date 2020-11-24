@@ -17,6 +17,7 @@ function Optimize-BTImageSource {
         $NewFilePath = '{0}\{1}' -f $Env:TEMP, $RemoteFileName
 
         if (!(Test-Path -Path $NewFilePath) -or $ForceRefresh) {
+            if ($Source -like '\\wsl$\*' -or [bool]([System.Uri]$Source).IsUnc) {
 (...)
 ```
 Then make sure you have `wslpath` and `wslvar` available on your WSL installation. I *think* `wslpath` is standard and `wslvar` is available by default on Ubuntu and maybe others but if it's not installed on your then grab it [here](https://github.com/wslutilities/wslu).
