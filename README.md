@@ -1,18 +1,29 @@
-# weechat-plugins
-Various weechat plugins. No warranty, provided as-is, etc.
+# weechat-scripts
+Various weechat scripts I use.
 
-## Unsupported directory
-This directory contains plugins which I no longer use and do not plan on updating. For archival and reference purposes.
+## wsl_notify.py
+You need to install [BurntToast](https://github.com/Windos/BurntToast) first and modify it to work with WSL UNC paths (at least until WSL team fixes their shit). After installation find (`(Get-Module -ListAvailable BurntToast).path`, on my machine it's in `C:\Program Files\WindowsPowerShell\Modules\BurntToast`) and edit BurntToast.psm1 file. Edit lines 9 and 15 (as of 2020-11-24) so the `Optimize-BTImageSource` function looks somewhat like this (note `$Source -like '\\wsl$\*'` added to if statemets as *first* condition):
+```
+function Optimize-BTImageSource {
+    param (
+        [Parameter(Mandatory)]
+        [String] $Source,
 
-## foobar_np.py
+        [Switch] $ForceRefresh
+    )
+    if ($Source -like '\\wsl$\*' -or [bool]([System.Uri]$Source).IsUnc -or $Source -like 'http?://*') {
+        $RemoteFileName = $Source -replace '/|:|\\', '-'
+
+        $NewFilePath = '{0}\{1}' -f $Env:TEMP, $RemoteFileName
+
+        if (!(Test-Path -Path $NewFilePath) -or $ForceRefresh) {
+(...)
 ```
-# install foo_controlserver (https://github.com/audiohead/foo_controlserver)
-# set port to $foobar_port, delimiter to '|||' and enable server
-# enable utf-8 output/input for non-ascii characters support
-# supported fields in $format: $artist, $albumartist, $date, $title, $album
-```
-### Usage
-`/np` will say now playing track: `/me NP: "What If (Soman Remix)" by DYM from The Technocratic Deception (2012)`
+Then make sure you have `wslpath` and `wslvar` available on your WSL installation. I *think* `wslpath` is standard and `wslvar` is available by default on Ubuntu and maybe others but if it's not installed on your then grab it [here](https://github.com/wslutilities/wslu).
+
+Then install the script as you would any other weechat python script and make sure `plugins.var.python.wsl_notify.icon_path` points to a valid icon (not sure if SVGs work), by default it points to 128x128 weechat icon on a standard Arch installation.
+
+Then, [if you want to](https://www.youtube.com/watch?v=D58rGFasJAI), you can run `/wsl_notify gen_appid_script` in weechat and run the generated powershell script to register a separate appid for this script so it can be managed separately by windows focus assist and similar without affecting all powershell notifications. Remember to set `plugins.var.python.wsl_notify.use_custom_appid` to `on` so the script will actually use it.
 
 ## mpv_np.py
 ```
@@ -50,3 +61,15 @@ They get their own section. This is still a bit wonky solution (especially the p
 #   'Failed to upload screenshot: [Errno 2] No such file or directory: '/mnt/c/mpv/np_screenshot.jpg''
 #   (this applies to other path mistakes so check them carefully, script will skip $url if upload errors out)
 ```
+## foobar_np.py
+```
+# install foo_controlserver (https://github.com/audiohead/foo_controlserver)
+# set port to $foobar_port, delimiter to '|||' and enable server
+# enable utf-8 output/input for non-ascii characters support
+# supported fields in $format: $artist, $albumartist, $date, $title, $album
+```
+### Usage
+`/np` will say now playing track: `/me NP: "What If (Soman Remix)" by DYM from The Technocratic Deception (2012)`
+
+## Unsupported directory
+This directory contains plugins which I no longer use and do not plan on updating. For archival and reference purposes.
