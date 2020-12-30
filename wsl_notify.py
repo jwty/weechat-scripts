@@ -7,7 +7,7 @@ import weechat as wc
 
 NAME = 'wsl_notify'
 AUTHOR = 'janoosh'
-VERSION = '1.0'
+VERSION = '1.1'
 LICENSE = 'BSD-2c'
 DESCRIPTION = 'send windows toast notifications on WSL systems'
 
@@ -121,6 +121,7 @@ def parse_message(data, _buffer, date, tags, displayed, highlight, prefix, messa
     server_name = wc.buffer_get_string(_buffer, 'localvar_server')
     away = wc.buffer_get_string(_buffer, 'localvar_away')
     own_nickname = 'nick_' + wc.buffer_get_string(_buffer, 'localvar_nick')
+    safe_message = message.replace("'", "''")
     if _buffer == wc.current_buffer() and is_focused:
         return wc.WEECHAT_RC_OK
     if away and not notify_when_away:
@@ -130,9 +131,9 @@ def parse_message(data, _buffer, date, tags, displayed, highlight, prefix, messa
     if buffer_name in wc.config_get_plugin('ignore_buffers').split(','):
         return wc.WEECHAT_RC_OK
     if buffer_type == 'private' and notify_query:
-        notify([f'{buffer_name} @ {server_name}', message, buffer_name])
+        notify([f'{buffer_name} @ {server_name}', safe_message, buffer_name])
     elif buffer_type == 'channel' and highlight:
-        notify([f'{prefix} @ {buffer_name} ({server_name})', message, buffer_name])
+        notify([f'{prefix} @ {buffer_name} ({server_name})', safe_message, buffer_name])
     return wc.WEECHAT_RC_OK
 
 
@@ -186,6 +187,7 @@ def toggle_silent():
 
 
 def parse_key_combos(data, signal, signal_data):
+    # this method sometimes works unreliably when minimising terminal window by clicking on its icon in taskbar but I blame windows
     global is_focused
     if signal_data == '\x01[[I':
         is_focused = True
